@@ -16,6 +16,41 @@ no dependency: open `index.html` and it works.
 
 ---
 
+## Demo
+
+A short walkthrough of the real interface — loading samples, reading the
+findings, selecting them, and producing the sanitized result:
+
+**▶ [Watch the demo — `docs/demo.mp4`](docs/demo.mp4)** (18 seconds)
+
+> Tip for repo owners: GitHub renders videos inline in a README only when they
+> are uploaded to `user-attachments`. To make the video play right in the
+> README, drag `docs/demo.mp4` into any GitHub issue, copy the generated
+> `https://github.com/user-attachments/…` URL, and replace the link above with
+> it. Until then, the link downloads/opens the MP4 directly.
+
+## Screenshots
+
+**The workbench** — document on the left, findings ledger on the right:
+
+![LeakLens workbench](docs/screenshots/hero.png)
+
+**The findings ledger** — severity labels, forensic line references, masked
+previews (never a full raw value):
+
+![Findings ledger](docs/screenshots/findings.png)
+
+**Sanitized output** — selected findings replaced with self-describing
+placeholders:
+
+![Sanitized preview](docs/screenshots/redaction.png)
+
+**Responsive down to mobile:**
+
+![Mobile layout](docs/screenshots/mobile.png)
+
+---
+
 ## How to run it
 
 1. Download or clone this folder.
@@ -33,14 +68,14 @@ No other tooling is used or required.
 
 ## What it detects
 
-Eleven rules across four categories, each documented in the app's
+Twelve rules across four categories, each documented in the app's
 **How the rules work** section — that section is generated from the same rule
 registry the scanner runs, so the page always describes what the tool
 actually does.
 
 | Category | Rules |
 | --- | --- |
-| Credentials | `api-key-assignment`, `access-token-assignment`, `password-assignment`, `bearer-token`, `jwt-like-token`, `cloud-access-key-id`, `private-key-block`, `database-uri-credentials` |
+| Credentials | `api-key-assignment`, `access-token-assignment`, `password-assignment`, `bearer-token`, `jwt-like-token`, `cloud-access-key-id`, `vendor-api-key`, `private-key-block`, `database-uri-credentials` |
 | Personal data | `email-address`, `phone-like-value` |
 | Infrastructure | `ipv4-address` |
 
@@ -55,6 +90,17 @@ actually does.
   secrets, but they deserve a human look.
 
 LeakLens never computes a numeric score. Labels are advisory, not a verdict.
+
+### Vendor API keys
+
+The `vendor-api-key` rule matches the documented token shapes of widely used
+services: OpenAI (`sk-proj-…`), Anthropic (`sk-ant-…`), Slack (`xox…-…-…`),
+Google API (`AIza…`), GitLab (`glpat-…`), Stripe secret/restricted keys
+(`sk_live_`/`rk_live_`), npm (`npm_…`), PyPI (`pypi-…`), SendGrid (`SG.…`),
+Twilio (`SK…hex`), and HashiCorp Vault (`hvs.…`). A shape match does not
+prove a key is real, active, or has permissions — validity is never checked.
+Publishable keys (Stripe `pk_live_`/`pk_test_`) are deliberately not flagged:
+they are meant to be public.
 
 ### Deliberate limits
 
@@ -130,13 +176,13 @@ inputs, and the documented placeholder/boundary policies. Run:
 node tests.js
 ```
 
-72 assertions, exit code `1` on any failure.
+104 assertions, exit code `1` on any failure.
 
 ## Limitations & honest disclosures
 
 - **Rules, not understanding.** A fixed regex set cannot reason about your
   content. Expect both false negatives and false positives.
-- **No safety verdict.** "No matches" is a statement about eleven rules, not
+- **No safety verdict.** "No matches" is a statement about twelve rules, not
   about your data.
 - **UTF-16 columns are approximate** around emoji and other multi-unit
   characters; line numbers are exact for LF, CRLF, and CR text.
@@ -144,6 +190,8 @@ node tests.js
   overlap its shape.
 - **Email matching is practical, not RFC 5322-complete.**
 - **The scanner is English-biased** in its labels and heuristics.
+- Screenshots and the demo recording above were captured from the real
+  application; no imagery is staged or mocked.
 - Tested in Chromium; other modern browsers should behave the same, but
   clipboard behavior varies by browser and permission policy.
 

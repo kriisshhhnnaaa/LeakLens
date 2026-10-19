@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="LeakLens — a local-first workbench for finding and redacting sensitive text before it is shared. Runs entirely in your browser.">
+  <title>LeakLens — Inspect before you expose</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <a class="skip-link" href="#source-text">Skip to the workbench</a>
+
+  <header class="masthead">
+    <div class="masthead-inner">
+      <a class="brand" href="#top" aria-label="LeakLens home">
+        <svg class="brand-mark" width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" focusable="false">
+          <circle cx="13" cy="13" r="11" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+          <circle cx="13" cy="13" r="4.5" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+          <path d="M2 13h6.5M17.5 13H24" stroke="currentColor" stroke-width="1.5"></path>
+        </svg>
+        <span class="brand-name">LeakLens</span>
+      </a>
+      <nav class="masthead-nav" aria-label="Page sections">
+        <a href="#workbench">Workbench</a>
+        <a href="#methodology">Methodology</a>
+      </nav>
+      <p class="masthead-note">Runs entirely in this tab — no network, no storage.</p>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <section class="hero">
+      <div class="hero-inner">
+        <p class="hero-kicker">Local-first sensitive-data workbench</p>
+        <h1>Your next public paste shouldn't be a security incident.</h1>
+        <p class="hero-sub">
+          LeakLens looks for the shapes credentials, tokens, private keys, and personal data
+          take in text, and helps you redact them before you share the file. It runs entirely
+          in this tab: your text never leaves your machine.
+        </p>
+      </div>
+    </section>
+
+    <section class="workbench" id="workbench" aria-label="Inspection workbench">
+      <div class="wb-grid">
+
+        <!-- ============ document side ============ -->
+        <div class="wb-doc" id="input">
+          <div class="wb-doc-head">
+            <h2>Document</h2>
+            <div class="doc-actions">
+              <button type="button" id="btn-import" class="btn-ghost">Import file…</button>
+              <input type="file" id="file-input" accept=".txt,.log,.json,.env,.yaml,.yml,.toml,.ini,.conf" hidden>
+            </div>
+          </div>
+
+          <p class="limitations-note" id="limitations-note">
+            <strong>What this tool is not:</strong> a fixed set of rules looks for common shapes —
+            it cannot know your context, and it does not catch everything. A report of no
+            findings is <strong>not</strong> proof the text is safe to share. Read it yourself.
+          </p>
+
+          <label class="visually-hidden" for="source-text">Text to inspect</label>
+          <textarea id="source-text" spellcheck="false" wrap="off"
+            placeholder="Paste text here, or import a file. Everything stays in this tab."></textarea>
+
+          <div class="doc-status">
+            <p id="char-count" aria-live="off">0 characters</p>
+            <p id="word-count" aria-live="off">0 words</p>
+            <p id="doc-size-warning" class="doc-size-warning" hidden>
+              Over the 250,000-character limit — trim the text or split it up.
+            </p>
+          </div>
+
+          <div class="doc-actions-row">
+            <button type="button" id="btn-scan" class="btn-primary">Scan text</button>
+            <button type="button" id="btn-clear" class="btn-ghost">Clear</button>
+          </div>
+
+          <div class="samples-block">
+            <h3>Try a sample</h3>
+            <p class="samples-note">
+              All values are fictional: reserved domains, documentation addresses, and strings
+              that spell out that they are not real. Never paste real credentials here — or anywhere.
+            </p>
+            <ul class="samples-list" id="samples-list"></ul>
+          </div>
+        </div>
+
+        <!-- ============ ledger side ============ -->
+        <div class="wb-ledger" id="findings-panel" aria-label="Findings and redaction">
+          <div class="ledger-head">
+            <h2>Findings</h2>
+            <p class="ledger-sub" id="ledger-sub" aria-live="polite">Nothing scanned yet.</p>
+          </div>
+
+          <div id="scan-error" class="scan-error" role="alert" hidden></div>
+
+          <div class="ledger-empty" id="ledger-empty">
+            <p>Run a scan to see what the rules find, line by line.</p>
+            <p class="ledger-empty-hint">Select findings below to include them in the redaction.</p>
+          </div>
+
+          <ol class="findings-list" id="findings-list"></ol>
+
+          <div class="ledger-tools" id="ledger-tools" hidden>
+            <button type="button" id="btn-select-all" class="btn-ghost btn-sm">Select all</button>
+            <button type="button" id="btn-select-none" class="btn-ghost btn-sm">Select none</button>
+            <button type="button" id="btn-restore-dismissed" class="btn-ghost btn-sm" hidden>Restore dismissed</button>
+          </div>
+
+          <div class="redact-box" id="redact-box" hidden>
+            <h3>Sanitized preview</h3>
+            <p class="redact-note" id="redact-note"></p>
+            <pre class="redact-preview" id="redact-preview" tabindex="0"></pre>
+            <div class="redact-actions">
+              <button type="button" id="btn-copy" class="btn-primary">Copy sanitized text</button>
+              <button type="button" id="btn-download" class="btn-ghost">Download .txt</button>
+              <span class="copy-feedback" id="copy-feedback" role="status" aria-live="polite"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <section class="methodology" id="methodology" aria-labelledby="methodology-h">
+      <div class="methodology-inner">
+        <h2 id="methodology-h">How the rules work</h2>
+        <p class="methodology-intro">
+          Every rule below is generated from the same registry the scanner runs — what you
+          read here is what the tool does. The scanner looks for shapes, not meaning: it can
+          be right, wrong, or silent, and it never contacts any service to validate a value.
+        </p>
+        <div id="methodology-list"></div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        <p class="footer-line">
+          <strong>LeakLens</strong> · Inspect before you expose · local-first, zero dependencies
+        </p>
+        <p class="footer-line">
+          No network calls, no analytics, no storage of your text. Dismissed findings are
+          kept for this tab session only and disappear when the page closes.
+        </p>
+        <p class="footer-line">
+          A “no findings” report means the rules found no matches — not that the text is safe.
+        </p>
+      </div>
+    </footer>
+
+  </main>
+
+  <div class="visually-hidden" id="announcer" role="status" aria-live="polite"></div>
+
+  <script src="samples.js"></script>
+  <script src="detector.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
